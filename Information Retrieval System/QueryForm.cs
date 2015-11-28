@@ -67,7 +67,7 @@ namespace Information_Retrieval_System
             List<KeyValuePair<string, double>> InverseDocumentFrequencies = RelevanceChecker.WeightingSchemeCalculation.CalculateIDF(queryAndDocs, allUniqueTerms);
 
             //get tf-idf
-            List<KeyValuePair<string, List<double>>> TFIDFs = RelevanceChecker.WeightingSchemeCalculation.TfIdf(termFrequencies, InverseDocumentFrequencies);
+            //List<KeyValuePair<string, List<double>>> TFIDFs = RelevanceChecker.WeightingSchemeCalculation.CalculateTfIdf(termFrequencies, InverseDocumentFrequencies, allUniqueTerms);
         }
     }
 }

@@ -93,9 +93,56 @@ namespace Information_Retrieval_System.RelevanceChecker
             return allIDFValues;
         }
 
-        public static List<KeyValuePair<string, List<double>>> TfIdf (List<KeyValuePair<string, List<double>>> TFs, List<KeyValuePair<string, double>> IDFs)
+        public static List<KeyValuePair<string, List<double>>> CalculateTfIdf (List<KeyValuePair<string, List<double>>> TFs, List<KeyValuePair<string, double>> IDFs, string[] uniqueTerms)
         {
             List<KeyValuePair<string, List<double>>> tfidfResults = new List<KeyValuePair<string, List<double>>>();
+
+            //saving TFs
+            List<double> termFreqs = new List<double>();
+            List<List<double>> allTFs = new List<List<double>>();
+
+            //saving IDFs
+            double InverseDocFreqs;
+            List<double> allIDFs = new List<double>();
+
+            //saving TF-IDFs
+            List<double> termTFIDFs = new List<double>();
+            List<List<double>> allTFIDFs = new List<List<double>>();
+
+            foreach(KeyValuePair<string, List<double>> tf in TFs)
+            {
+                termFreqs = tf.Value;
+                allTFs.Add(termFreqs);
+            }
+
+            foreach(KeyValuePair<string, double> idf in IDFs)
+            {
+                InverseDocFreqs = idf.Value;
+                allIDFs.Add(InverseDocFreqs);
+            }
+
+            foreach(double idf in allIDFs)
+            {
+                foreach(List<double> tfs in allTFs)
+                {
+                    foreach(double tf in tfs)
+                    {
+                        double tfidf = tf * idf;
+                        termTFIDFs.Add(tfidf);
+                        tfidf = 0;
+                    }
+                    allTFIDFs.Add(termTFIDFs);
+                    termTFIDFs.Clear();
+                }
+            }
+
+            for(int i = 0; i < uniqueTerms.Length; i++)
+            {
+                KeyValuePair<string, List<double>> kvp = new KeyValuePair<string, List<double>>(uniqueTerms[i], allTFIDFs.ElementAt(i));
+                tfidfResults.Add(kvp);
+            }
+            
+
             return tfidfResults;
         }
     }

@@ -10,39 +10,33 @@ namespace Information_Retrieval_System.Preprocessing
 {
     class UniqueTerms
     {
-        public static string[] getUniqueTerms(string[] query, List<string[]> documents)
+        public static List<List<string>> getDocUniqueTerms(List<List<string>> input)
         {
-            //Save all documents to single string
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            string resourceName = "Information_Retrieval_System.Resources.MEDDocuments.txt";
+            List<List<string>> uniqueDocTerms = new List<List<string>>();
 
-            string result;
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            foreach (List<string> sa in input)
             {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    //single string that contains all documents
-                    result = reader.ReadToEnd();
-                }
+                List<string> newsa = sa.Distinct().ToList();
+                uniqueDocTerms.Add(newsa);
             }
 
-            string[] docDelimiters = { ".W", "\r", "\n", " ", ".", ",", "?", "!", "-", "/", "'", "(", ")" };
+            return uniqueDocTerms;
 
-            string[] d = result.Split(docDelimiters, StringSplitOptions.RemoveEmptyEntries);
-            List<string> terms = d.ToList();
-            terms.RemoveAt(0);
-            terms.RemoveAt(0);
-            d = terms.ToArray();
+        }
 
-            string[] uniqueTerms = query.Union(d).ToArray();
-            uniqueTerms = uniqueTerms.Distinct().ToArray();
-
-            uniqueTerms = StopWords.RemoveStopWords(uniqueTerms);
-            uniqueTerms = WordStemmer.QueryStemmer(uniqueTerms);
-
-            return uniqueTerms;
-
+        public static List<string> getAllUniqueTerms(List<List<string>> input)
+        {
+            List<string> allUniqueTerms = new List<string>();
+            foreach(List<string> sl in input)
+            {
+                foreach(string s in sl)
+                {
+                    allUniqueTerms.Add(s);
+                }
+            }
+            allUniqueTerms = allUniqueTerms.Distinct().ToList();
+            return allUniqueTerms;
         }
     }
 }

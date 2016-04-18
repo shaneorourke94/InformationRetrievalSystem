@@ -11,68 +11,85 @@ namespace Information_Retrieval_System.RelevanceChecker
 {
     class WeightingSchemeCalculation
     {
-        // Store normalised TF for every term in keyValuePair list
-        public static List<KeyValuePair<string, List<double>>> NormalisedTF(List<string[]> queryAndDocuments, string[] uniqueTerms)
+        // Store normalised TF for every term in Dictionary list
+        public static Dictionary<string, Dictionary<string, double>> NormalisedTF(List<List<string>> queryAndDocuments, List<List<string>> uniqueDocTerms)
         {
-            //all normalised term frequencies for every term
-            List<KeyValuePair<string, List<double>>> allTFValues = new List<KeyValuePair<string, List<double>>>();
+            ////all normalised term frequencies for every term
+            Dictionary<string, Dictionary<string, double>> allTFValues = new Dictionary<string, Dictionary<string, double>>();
 
             //store all term frequencies for given term
             List<List<double>> allTermFrequencies = new List<List<double>>();
+            int docNumber = 0;
 
-            foreach (string term in uniqueTerms)
+            //loop through each doc
+            foreach (List<string> docTerms in uniqueDocTerms)
             {
-                List<double> termFrequencies = new List<double>();
+                //variables for storing results
+                Dictionary<string, double> termFrequencies = new Dictionary<string, double>();
 
+                string docNum = "doc" + docNumber;
+                docNumber++;
                 //temp values for storing term frequency and normalised term frequency
                 double tf = 0;
                 double ntf = 0;
-                foreach (string[] doc in queryAndDocuments)
+
+                //loop through each unique term in a doc
+                foreach (string docTerm in docTerms)
                 {
-                    double docSize = (double)doc.Count();
-                    foreach(string t in doc)
+                    //foreach document loop through each term in each doc
+                    foreach (List<string> doc in queryAndDocuments)
                     {
-                        if(term.Equals(t))
+                        double docSize = (double)doc.Count();
+                        
+                        foreach (string term in doc)
                         {
-                            tf++;
+                            if (term.Equals(docTerm))
+                            {
+                                tf++;
+                            }
                         }
+
+                        //calculate specific normalised term frequency
+                        ntf = tf / docSize;
+
+                        if (!termFrequencies.ContainsKey(docTerm) && ntf > 0)
+                        {
+                            termFrequencies.Add(docTerm, ntf);
+
+                        }
+
+                        tf = 0;
+                        ntf = 0;
+                        docSize = 0;
                     }
-
-                    ntf = tf / docSize;
-
-                    termFrequencies.Add(ntf);
-                    tf = 0;
-                    ntf = 0;
-                    docSize = 0;
                 }
-                allTermFrequencies.Add(termFrequencies);
+                //save all term frequencies
+                if (!allTFValues.ContainsKey(docNum))
+                {
+                    allTFValues.Add(docNum, termFrequencies);
+                }
             }
 
-            for(int i=0; i<uniqueTerms.Length;i++)
-            {
-                allTFValues.Add(new KeyValuePair<string, List<double>>(uniqueTerms[i], allTermFrequencies[i]));
-            }
-
+            //return tfs
             return allTFValues;
         }
 
-        public static List<KeyValuePair<string, double>> CalculateIDF(List<string[]> documents, string[] uniqueTerms)
+        public static Dictionary<string, double> CalculateIDF(List<List<string>> queryAndDocuments, List<string> uniqueTerms)
         {
-            double numDocs = documents.Count() -1;
+            double numDocs = queryAndDocuments.Count() - 1;
 
             List<double> idfs = new List<double>();
 
-            foreach(string term in uniqueTerms)
+            foreach (string term in uniqueTerms)
             {
                 double appears = 0;
-                foreach (string[] doc in documents)
+                foreach (List<string> doc in queryAndDocuments)
                 {
-                    int pos = Array.IndexOf(doc, term);
-                    if(pos > -1)
+                    if (doc.Contains(term))
                     {
                         appears++;
                     }
-                    
+
                 }
 
                 double idf = Math.Log10(numDocs / appears);
@@ -81,69 +98,121 @@ namespace Information_Retrieval_System.RelevanceChecker
                 idf = 0;
             }
 
-            //Return List of KeyValuePairs
+            //Return List of Dictionarys
 
-            List<KeyValuePair<string, double>> allIDFValues = new List<KeyValuePair<string, double>>();
+            Dictionary<string, double> allIDFValues = new Dictionary<string, double>();
 
-            for (int i = 0; i < uniqueTerms.Length; i++)
+            for (int i = 0; i < uniqueTerms.Count; i++)
             {
-                allIDFValues.Add(new KeyValuePair<string, double>(uniqueTerms[i], idfs[i]));
+                allIDFValues.Add(uniqueTerms[i], idfs[i]);
             }
 
             return allIDFValues;
         }
 
-        public static List<KeyValuePair<string, List<double>>> CalculateTfIdf (List<KeyValuePair<string, List<double>>> TFs, List<KeyValuePair<string, double>> IDFs, string[] uniqueTerms)
+        public static Dictionary<string, Dictionary<string, double>> CalculateTfIdf(Dictionary<string, Dictionary<string, double>> TFs, Dictionary<string, double> IDFs)
         {
-            List<KeyValuePair<string, List<double>>> tfidfResults = new List<KeyValuePair<string, List<double>>>();
+            Dictionary<string, Dictionary<string, double>> tfidfResults = new Dictionary<string, Dictionary<string, double>>();
 
-            //saving TFs
-            List<double> termFreqs = new List<double>();
-            List<List<double>> allTFs = new List<List<double>>();
-
-            //saving IDFs
-            double InverseDocFreqs;
-            List<double> allIDFs = new List<double>();
-
-            //saving TF-IDFs
-            List<double> termTFIDFs = new List<double>();
-            List<List<double>> allTFIDFs = new List<List<double>>();
-
-            foreach(KeyValuePair<string, List<double>> tf in TFs)
+            foreach (KeyValuePair<string, Dictionary<string, double>> docTfs in TFs)
             {
-                termFreqs = tf.Value;
-                allTFs.Add(termFreqs);
-            }
+                string docNum = docTfs.Key;
+                Dictionary<string, double> termFreqs = docTfs.Value;
 
-            foreach(KeyValuePair<string, double> idf in IDFs)
-            {
-                InverseDocFreqs = idf.Value;
-                allIDFs.Add(InverseDocFreqs);
-            }
+                Dictionary<string, double> termTFIDFResults = new Dictionary<string, double>();
 
-            foreach(double idf in allIDFs)
-            {
-                foreach(List<double> tfs in allTFs)
+
+                foreach (KeyValuePair<string, double> tf in termFreqs)
                 {
-                    foreach(double tf in tfs)
+                    string term1 = tf.Key;
+                    double termFreq = tf.Value;
+
+                    double inverseDocFreq = IDFs[term1];
+
+                    double tf_idf = termFreq * inverseDocFreq;
+
+                    if (!termTFIDFResults.ContainsKey(term1))
                     {
-                        double tfidf = tf * idf;
-                        termTFIDFs.Add(tfidf);
-                        tfidf = 0;
+                        termTFIDFResults.Add(term1, tf_idf);
                     }
-                    allTFIDFs.Add(termTFIDFs);
-                    termTFIDFs.Clear();
+                    
+                }
+                if (!termFreqs.ContainsKey(docNum))
+                {
+                    tfidfResults.Add(docNum, termTFIDFResults);
                 }
             }
 
-            for(int i = 0; i < uniqueTerms.Length; i++)
-            {
-                KeyValuePair<string, List<double>> kvp = new KeyValuePair<string, List<double>>(uniqueTerms[i], allTFIDFs.ElementAt(i));
-                tfidfResults.Add(kvp);
-            }
-            
-
             return tfidfResults;
+        }
+
+        public static Dictionary<string, double> CalculateVectors(Dictionary<string, Dictionary<string, double>> TFIDFs)
+        {
+            Dictionary<string, double> vectorResults = new Dictionary<string, double>();
+
+            foreach(KeyValuePair<string, Dictionary<string, double>> docTFIDFs in TFIDFs)
+            {
+                string docNum = docTFIDFs.Key;
+                Dictionary<string, double> tf_idfs = docTFIDFs.Value;
+                double sqTFIDFs = 0;
+                foreach(KeyValuePair<string, double> tfidf in tf_idfs)
+                {
+                    sqTFIDFs += (tfidf.Value * tfidf.Value);
+                }
+                double vectorLength = Math.Sqrt(sqTFIDFs);
+
+                if(!vectorResults.ContainsKey(docNum))
+                {
+                    vectorResults.Add(docNum, vectorLength);
+                }
+            }
+
+            return vectorResults;
+        }
+
+        public static Dictionary<string, double> CalculateDotProducts(Dictionary<string, Dictionary<string, double>> TFIDFs)
+        {
+            Dictionary<string, double> dotProductResults = new Dictionary<string, double>();
+
+            //query tfidf values
+            Dictionary<string, double> qTFIDFs = TFIDFs["doc0"];
+
+            TFIDFs.Remove("doc0");
+
+            foreach (KeyValuePair<string, Dictionary<string, double>> docTFIDFs in TFIDFs)
+            {
+                string docNum = docTFIDFs.Key;
+                double dotProduct = 0;
+                Dictionary<string, double> termTFIDFs = docTFIDFs.Value;
+                foreach (KeyValuePair<string, double> termTFIDF in termTFIDFs)
+                {
+                    
+                    
+                    if (qTFIDFs.ContainsKey(termTFIDF.Key))
+                    {
+                        dotProduct += (qTFIDFs[termTFIDF.Key] * termTFIDF.Value);
+                    }
+                    
+                }
+                dotProductResults.Add(docNum, dotProduct);
+
+            }
+
+
+            return dotProductResults;
+        }
+
+        public static Dictionary<string, double> calculateRelevancy(Dictionary<string, double> dotProducts, Dictionary<string, double> vectors)
+        {
+            Dictionary<string, double> relevancies = new Dictionary<string, double>();
+
+            foreach(KeyValuePair<string, double> dp in dotProducts)
+            {
+                double relevance = dp.Value / (vectors["doc0"] * vectors[dp.Key]);
+                relevancies.Add(dp.Key, relevance);
+            }
+
+            return relevancies;
         }
     }
 }

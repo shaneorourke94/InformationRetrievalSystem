@@ -11,7 +11,7 @@ namespace Information_Retrieval_System.Preprocessing
 {
     class DocProcesser
     {
-        public static List<string[]> GetDocuments() //returns a list of string arrays that will be each document stemmed and have stop word removed
+        public static List<List<string>> GetDocuments() //returns a list of string arrays that will be each document stemmed and have stop word removed
         {
             //Save all documents to single string
             Assembly assembly = Assembly.GetExecutingAssembly();
@@ -43,7 +43,7 @@ namespace Information_Retrieval_System.Preprocessing
             }
 
             //take stop words and stem all documents
-            List<string[]> finalDocumentsList = new List<string[]>();
+            List<List<string>> finalDocumentsList = new List<List<string>>();
             foreach (string[] dt in initialDocumentsList)
             {
                 string[] removedStopWords = StopWords.RemoveStopWords(dt);
@@ -51,8 +51,7 @@ namespace Information_Retrieval_System.Preprocessing
                 //remove doc number from beginning of document content
                 List<string> temp = new List<string>(finalDoc);
                 temp.RemoveAt(0);
-                finalDoc = temp.ToArray();
-                finalDocumentsList.Add(finalDoc);
+                finalDocumentsList.Add(temp);
 
             }
             //return processed list of documents
